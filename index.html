@@ -3,69 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三年级趣味奥数闯关</title>
+    <title>🏆 趣味奥数闯关大挑战 🏆</title>
     <style>
-        body { 
-            font-family: 'Comic Sans MS', 'PingFang SC', 'Microsoft YaHei', sans-serif; 
-            background-color: #f0f8ff; /* 柔和的爱丽丝蓝背景 */
-            text-align: center; 
+        body, html {
+            height: 100%;
             margin: 0;
-            padding: 20px;
+            font-family: 'Comic Sans MS', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            overflow: hidden; /* 防止背景滚动 */
         }
-        .header { 
-            background-color: #4CAF50; 
-            color: white; 
-            padding: 20px; 
-            border-radius: 15px; 
-            margin: 20px auto; 
-            width: 80%; 
-            max-width: 800px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+
+        /* 使用生成的精美背景图 */
+        .bg-image {
+            background-image: url('image_0.png'); 
+            height: 100%; 
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: relative;
         }
-        .subtitle { 
-            font-size: 1em; 
-            opacity: 0.9; 
-            margin-top: 5px;
+
+        /* 黑色遮罩，让文字更清晰 */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.3); /* 调整透明度 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-        .game-container { 
-            display: flex; 
-            justify-content: center; 
-            gap: 30px; 
-            flex-wrap: wrap; 
-            margin-top: 50px; 
+
+        .header {
+            color: white;
+            text-align: center;
+            margin-bottom: 50px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
-        .game-card { 
-            background-color: white; 
-            border: 3px solid #ddd; 
-            border-radius: 20px; 
-            padding: 40px 20px; 
-            width: 220px; 
-            text-decoration: none; 
-            color: #333; 
-            font-size: 1.3em; 
-            font-weight: bold; 
-            box-shadow: 0 6px 12px rgba(0,0,0,0.05); 
-            transition: all 0.3s ease; 
+
+        .header h1 {
+            font-size: 3.5em;
+            margin: 0;
+            letter-spacing: 2px;
         }
-        .game-card:hover { 
-            transform: translateY(-10px); 
-            border-color: #FF9800; 
-            color: #FF9800; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+
+        .game-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        /* 设计具有科技感和童趣的游戏卡片 */
+        .game-card {
+            background: rgba(255, 255, 255, 0.15); /* 半透明白 */
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            padding: 50px 30px;
+            width: 250px;
+            text-decoration: none;
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); /* 玻璃纳摩效果 */
+            backdrop-filter: blur(4px); /* 背景模糊 */
+            -webkit-backdrop-filter: blur(4px);
+            transition: all 0.4s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-card:hover {
+            transform: translateY(-15px) scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: #FF9800; /* 悬停时变为橙色边框 */
+            box-shadow: 0 12px 40px 0 rgba(255, 152, 0, 0.5);
+        }
+
+        .game-card .icon {
+            font-size: 2em;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>🏆 趣味奥数闯关大挑战 🏆</h1>
-        <p class="subtitle">科大精英-周南明德分部 · 专属互动课堂</p>
-    </div>
+    <div class="bg-image">
+        <div class="overlay">
+            <div class="header">
+                <h1>🏆 趣味奥数闯关大挑战 🏆</h1>
+            </div>
 
-    <div class="game-container">
-        <a href="game1.html" class="game-card">🧩 关卡一：<br><br>逻辑迷宫</a>
-        <a href="game2.html" class="game-card">💎 关卡二：<br><br>数字寻宝</a>
-        <a href="game3.html" class="game-card">🚀 关卡三：<br><br>图形密码</a>
+            <div class="game-container">
+                <a href="game1.html" class="game-card">
+                    <span class="icon">🧩</span>
+                    <span>关卡一：<br>逻辑迷宫</span>
+                </a>
+                <a href="game2.html" class="game-card">
+                    <span class="icon">💎</span>
+                    <span>关卡二：<br>数字寻宝</span>
+                </a>
+                <a href="game3.html" class="game-card">
+                    <span class="icon">🚀</span>
+                    <span>关卡三：<br>图形密码</span>
+                </a>
+            </div>
+        </div>
     </div>
 
 </body>

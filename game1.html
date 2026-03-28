@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关卡一：逻辑迷宫</title>
+    <style>
+        body { 
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; 
+            background-color: #fffacd; /* 欢快的柠檬绸色背景 */
+            text-align: center; 
+            padding: 40px 20px; 
+            margin: 0;
+        }
+        .content-box { 
+            background-color: white; 
+            border-radius: 20px; 
+            padding: 40px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+            max-width: 800px; 
+            margin: 0 auto; 
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .game-title {
+            color: #FF5722;
+            font-size: 2em;
+            margin-top: 0;
+        }
+        #game-area {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            margin: 20px 0;
+            background-color: #fafafa;
+            color: #888;
+            font-size: 1.2em;
+        }
+        .back-btn { 
+            display: inline-block; 
+            padding: 12px 30px; 
+            background-color: #2196F3; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 10px; 
+            font-size: 1.2em;
+            font-weight: bold; 
+            transition: background-color 0.2s;
+            margin: 0 auto;
+        }
+        .back-btn:hover { 
+            background-color: #1976D2; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content-box">
+        <h2 class="game-title">🧩 关卡一：逻辑迷宫</h2>
+        
+        <div id="game-area">
+            <p>（游戏组件加载区）<br>准备迎接挑战吧！</p>
+        </div>
+
+        <a href="index.html" class="back-btn">🔙 返回闯关大厅</a>
+    </div>
+
+</body>
+</html>

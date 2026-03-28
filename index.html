@@ -9,27 +9,51 @@
             height: 100%;
             margin: 0;
             font-family: 'Comic Sans MS', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            overflow: hidden; /* 防止背景滚动 */
+            overflow: hidden; 
+            /* 渐变深色背景，带点科技和神秘感 */
+            background: linear-gradient(135deg, #1a1c29 0%, #2a3158 100%);
+            color: white;
         }
 
-        /* 使用生成的精美背景图 */
-        .bg-image {
-            background-image: url('image_0.png'); 
-            height: 100%; 
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
-            position: relative;
-        }
-
-        /* 黑色遮罩，让文字更清晰 */
-        .overlay {
+        /* 纯 CSS 绘制的数学网格背景 */
+        .math-grid {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.3); /* 调整透明度 */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 0;
+        }
+
+        /* 纯 CSS 漂浮的数学符号 */
+        .floating-math {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.1);
+            font-size: 4em;
+            font-family: 'Times New Roman', serif;
+            user-select: none;
+            z-index: 1;
+        }
+        .sym-1 { top: 10%; left: 10%; animation: float 6s ease-in-out infinite; }
+        .sym-2 { top: 20%; right: 15%; animation: float 8s ease-in-out infinite alternate; }
+        .sym-3 { bottom: 15%; left: 20%; animation: float 7s ease-in-out infinite reverse; }
+        .sym-4 { bottom: 20%; right: 10%; animation: float 5s ease-in-out infinite; }
+        .sym-5 { top: 40%; left: 50%; font-size: 8em; color: rgba(255, 152, 0, 0.05); transform: translate(-50%, -50%); }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 2; /* 确保内容在背景之上 */
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -37,16 +61,16 @@
         }
 
         .header {
-            color: white;
             text-align: center;
             margin-bottom: 50px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
         }
 
         .header h1 {
             font-size: 3.5em;
             margin: 0;
             letter-spacing: 2px;
+            color: #4CAF50; /* 绿色标题，活泼且护眼 */
         }
 
         .game-container {
@@ -56,10 +80,10 @@
             flex-wrap: wrap;
         }
 
-        /* 设计具有科技感和童趣的游戏卡片 */
+        /* 玻璃质感的游戏卡片 */
         .game-card {
-            background: rgba(255, 255, 255, 0.15); /* 半透明白 */
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1); 
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 25px;
             padding: 50px 30px;
             width: 250px;
@@ -68,10 +92,10 @@
             font-size: 1.5em;
             font-weight: bold;
             text-align: center;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); /* 玻璃纳摩效果 */
-            backdrop-filter: blur(4px); /* 背景模糊 */
-            -webkit-backdrop-filter: blur(4px);
-            transition: all 0.4s ease-in-out;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); 
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -80,39 +104,45 @@
 
         .game-card:hover {
             transform: translateY(-15px) scale(1.05);
-            background: rgba(255, 255, 255, 0.25);
-            border-color: #FF9800; /* 悬停时变为橙色边框 */
-            box-shadow: 0 12px 40px 0 rgba(255, 152, 0, 0.5);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #FF9800; 
+            box-shadow: 0 15px 40px 0 rgba(255, 152, 0, 0.4);
+            color: #FF9800;
         }
 
         .game-card .icon {
-            font-size: 2em;
+            font-size: 2.5em;
             margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-image">
-        <div class="overlay">
-            <div class="header">
-                <h1>🏆 趣味奥数闯关大挑战 🏆</h1>
-            </div>
+    <div class="math-grid"></div>
+    <div class="floating-math sym-1">π</div>
+    <div class="floating-math sym-2">∑</div>
+    <div class="floating-math sym-3">∞</div>
+    <div class="floating-math sym-4">∫</div>
+    <div class="floating-math sym-5">x²</div>
 
-            <div class="game-container">
-                <a href="game1.html" class="game-card">
-                    <span class="icon">🧩</span>
-                    <span>关卡一：<br>逻辑迷宫</span>
-                </a>
-                <a href="game2.html" class="game-card">
-                    <span class="icon">💎</span>
-                    <span>关卡二：<br>数字寻宝</span>
-                </a>
-                <a href="game3.html" class="game-card">
-                    <span class="icon">🚀</span>
-                    <span>关卡三：<br>图形密码</span>
-                </a>
-            </div>
+    <div class="content-wrapper">
+        <div class="header">
+            <h1>🏆 趣味奥数闯关大挑战 🏆</h1>
+        </div>
+
+        <div class="game-container">
+            <a href="game1.html" class="game-card">
+                <span class="icon">🧩</span>
+                <span>关卡一：<br>逻辑迷宫</span>
+            </a>
+            <a href="game2.html" class="game-card">
+                <span class="icon">💎</span>
+                <span>关卡二：<br>数字寻宝</span>
+            </a>
+            <a href="game3.html" class="game-card">
+                <span class="icon">🚀</span>
+                <span>关卡三：<br>图形密码</span>
+            </a>
         </div>
     </div>
 

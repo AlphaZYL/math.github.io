@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>科大菁英工作室</title>
+	<style>
+		:root {
+			--bg: #f4f7ff;
+			--card: #ffffff;
+			--primary: #2f5bea;
+			--primary-hover: #2248c8;
+			--text: #1d2433;
+			--muted: #5d6b85;
+			--shadow: 0 12px 30px rgba(39, 73, 175, 0.12);
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+			background: linear-gradient(180deg, #eef3ff 0%, #f8faff 45%, #ffffff 100%);
+			color: var(--text);
+			min-height: 100vh;
+		}
+
+		.container {
+			max-width: 980px;
+			margin: 0 auto;
+			padding: 56px 20px;
+		}
+
+		.hero {
+			text-align: center;
+			margin-bottom: 40px;
+		}
+
+		h1 {
+			margin: 0 0 12px;
+			font-size: 2.2rem;
+			letter-spacing: 1px;
+		}
+
+		.subtitle {
+			margin: 0;
+			color: var(--muted);
+			font-size: 1.05rem;
+			line-height: 1.7;
+		}
+
+		.subjects {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+			gap: 16px;
+			margin-top: 34px;
+		}
+
+		.subject-link {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 84px;
+			border-radius: 14px;
+			background: var(--card);
+			color: var(--primary);
+			text-decoration: none;
+			font-weight: 700;
+			font-size: 1.05rem;
+			border: 1px solid #e4ebff;
+			box-shadow: var(--shadow);
+			transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+		}
+
+		.subject-link:hover {
+			transform: translateY(-2px);
+			background: var(--primary);
+			color: #fff;
+			box-shadow: 0 14px 28px rgba(47, 91, 234, 0.24);
+		}
+
+		footer {
+			margin-top: 36px;
+			text-align: center;
+			color: var(--muted);
+			font-size: 0.92rem;
+		}
+	</style>
+</head>
+<body>
+	<main class="container">
+		<section class="hero">
+			<h1>科大菁英工作室</h1>
+			<p class="subtitle">高分名师，直接对接</p>
+			<p class="subtitle">多学科全名师任选</p>
+			<p class="subtitle">全阶体系，透明教学</p>
+			<p class="subtitle">进一步了解科大菁英，请选择学科，查看该学科全部教师简介</p>
+		</section>
+
+		<section class="subjects" aria-label="学科导航">
+			<a class="subject-link" href="math.html">数学</a>
+			<a class="subject-link" href="physics.html">物理</a>
+			<a class="subject-link" href="chemistry.html">化学</a>
+			<a class="subject-link" href="biology.html">生物</a>
+			<a class="subject-link" href="english.html">英语</a>
+			<a class="subject-link" href="contact.html">联系我们</a>
+		</section>
+
+		<footer>© 2026 科大菁英工作室</footer>
+	</main>
+</body>
+</html>

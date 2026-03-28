@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第三关：雷区探秘 - 趣味奥数闯关大挑战</title>
+    <style>
+        :root {
+            --bg-deep: #010515; 
+            --bg-mid: #0a193c;
+            --highlight-cyan: #00f2ff; 
+            --highlight-blue: #0a99ff; 
+            --text-light: #e0f7fa; 
+            --glass-bg: rgba(10, 25, 60, 0.7);
+            --correct-color: #4CAF50;
+            --error-color: #ff5252;
+        }
+
+        body, html {
+            height: 100%; margin: 0;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            overflow: hidden; 
+            background: radial-gradient(circle at center, var(--bg-mid) 0%, var(--bg-deep) 100%); 
+            color: var(--text-light);
+        }
+
+        .tech-grid {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), 
+                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px; z-index: 0;
+        }
+
+        .overlay {
+            height: 100%; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; position: relative; z-index: 10;
+        }
+
+        .header-bar {
+            width: 90%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center;
+            margin-top: 10px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+        }
+
+        .game-title { color: var(--highlight-cyan); font-size: 2.2em; margin: 0; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+        .mission-status { color: var(--highlight-blue); font-size: 1.1em; letter-spacing: 1px; font-weight: bold; }
+
+        #puzzle-container {
+            background: rgba(15, 30, 60, 0.6);
+            border: 2px solid rgba(0, 242, 255, 0.3);
+            border-radius: 20px; width: 90%; max-width: 1000px; height: 75vh; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 242, 255, 0.1);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            position: relative; padding: 20px; box-sizing: border-box;
+            transition: transform 0.1s; /* 用于爆炸震动特效 */
+        }
+
+        /* 爆炸震动动画 */
+        .shake { animation: shakeAnim 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shakeAnim {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); border-color: red; box-shadow: 0 0 40px red;}
+            40%, 60% { transform: translate3d(8px, 0, 0); }
+        }
+
+        .puzzle-content {
+            display: none; flex-direction: column; align-items: center; width: 100%; text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        .puzzle-content.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .puzzle-desc { font-size: 1.2em; margin-bottom: 15px; color: #fff; line-height: 1.4; }
+
+        /* 扫雷网格通用样式 */
+        .ms-grid {
+            display: grid; gap: 3px; background: rgba(0, 242, 255, 0.2); 
+            padding: 5px; border-radius: 8px; border: 2px solid var(--highlight-blue);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .ms-cell {
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; user-select: none; border-radius: 4px;
+        }
+        .ms-cell.revealed { background: rgba(220, 230, 240, 0.95); box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
+        .ms-cell.hidden {
+            background: linear-gradient(135deg, rgba(10, 153, 255, 0.8), rgba(10, 25, 60, 0.9));
+            border: 1px solid rgba(0, 242, 255, 0.5); cursor: pointer; transition: all 0.2s;
+        }
+        .ms-cell.hidden:hover { box-shadow: 0 0 8px var(--highlight-cyan); transform: scale(1.1); z-index: 2; }
+        
+        .c-1 { color: #1976D2; } .c-2 { color: #388E3C; } .c-3 { color: #D32F2F; }
+        .c-4 { color: #7B1FA2; } .c-5 { color: #F57C00; } .c-6 { color: #0097A7; }
+        .c-0 { color: transparent; }
+
+        /* 挑战1 (7x7) */
+        #grid-p1 { grid-template-columns: repeat(7, 40px); margin-bottom: 20px; }
+        #grid-p1 .ms-cell { width: 40px; height: 40px; font-size: 1.5em; }
+
+        /* 挑战2 (10x10) - 格子调大，更容易点击 */
+        #grid-p2 { grid-template-columns: repeat(10, 36px); margin-bottom: 15px; }
+        #grid-p2 .ms-cell { width: 36px; height: 36px; font-size: 1.3em; }
+
+        /* 战术选择弹出菜单 */
+        .action-popup {
+            display: none; position: absolute; background: rgba(1, 5, 21, 0.95);
+            border: 2px solid var(--highlight-cyan); border-radius: 10px; padding: 8px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.6); z-index: 1000;
+            flex-direction: column; gap: 8px; transform: translate(-50%, -100%); margin-top: -10px;
+        }
+        /* 弹出菜单的小尾巴 */
+        .action-popup::after {
+            content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+            border-width: 10px 10px 0; border-style: solid; border-color: var(--highlight-cyan) transparent transparent transparent;
+        }
+        .action-btn {
+            background: rgba(10, 153, 255, 0.2); border: 1px solid var(--highlight-blue);
+            color: #fff; padding: 8px 15px; cursor: pointer; border-radius: 6px; font-size: 1.1em; font-weight: bold;
+            transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; width: 100px;
+        }
+        .action-btn.safe:hover { background: var(--correct-color); border-color: #fff; }
+        .action-btn.flag:hover { background: var(--error-color); border-color: #fff; }
+
+        /* 输入框与按钮 */
+        .input-box {
+            background: rgba(255, 255, 255, 0.1); border: 2px solid #FF9800; color: #FF9800;
+            width: 80px; height: 40px; border-radius: 8px; text-align: center;
+            font-size: 1.5em; font-weight: bold; outline: none; margin: 0 10px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #0a99ff, #00f2ff); border: none; color: #000;
+            padding: 10px 35px; font-size: 1.2em; font-weight: bold; border-radius: 30px;
+            cursor: pointer; transition: all 0.3s; margin-top: 10px; box-shadow: 0 5px 15px rgba(0, 242, 255, 0.3);
+        }
+        .submit-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0, 242, 255, 0.5); }
+
+        #feedback { margin-top: 10px; font-size: 1.2em; font-weight: bold; height: 30px; }
+        .correct-text { color: var(--correct-color); text-shadow: 0 0 10px rgba(76, 175, 80, 0.5); }
+        .error-text { color: var(--error-color); text-shadow: 0 0 10px rgba(255, 82, 82, 0.5); }
+
+        .action-bar { position: absolute; bottom: 40px; right: 5%; display: flex; gap: 15px; z-index: 100; }
+        .nav-btn {
+            display: inline-block; padding: 12px 25px; background-color: var(--glass-bg); color: var(--text-light); 
+            text-decoration: none; border-radius: 10px; font-size: 1.1em; font-weight: bold; 
+            transition: all 0.2s; border: 1px solid rgba(0, 242, 255, 0.3); cursor: pointer;
+        }
+        .nav-btn:hover { background-color: rgba(20, 60, 120, 0.9); border-color: var(--highlight-cyan); color: var(--highlight-cyan); }
+        #next-btn { background-color: rgba(0, 242, 255, 0.15); border-color: var(--highlight-cyan); }
+
+    </style>
+</head>
+<body>
+
+    <div class="tech-grid"></div>
+
+    <div id="action-popup" class="action-popup">
+        <button class="action-btn safe" onclick="handleCellAction('safe')"><span>✅</span> 安全</button>
+        <button class="action-btn flag" onclick="handleCellAction('flag')"><span>🚩</span> 插旗</button>
+    </div>
+
+    <div class="overlay">
+        <div class="header-bar">
+            <h2 class="game-title">🚀 第三关：雷区探秘</h2>
+            <div class="mission-status" id="stage-indicator">进度：1 / 2</div>
+        </div>
+        
+        <div id="puzzle-container">
+            
+            <div id="puzzle-1" class="puzzle-content active">
+                <div class="puzzle-desc">
+                    【阶段 1：雷区勘测】<br>
+                    这是一个 7x7 的残局，深蓝色方块代表未知区域。<br>
+                    请根据已显现的数字推理，深蓝色方块下面<strong>一共藏着多少颗地雷</strong>？
+                </div>
+                <div id="grid-p1" class="ms-grid"></div>
+                <div>
+                    <label style="font-size: 1.2em; font-weight: bold;">未知区域内地雷总数：</label>
+                    <input type="number" id="ans-p1" class="input-box" min="0" max="20">
+                </div>
+                <button class="submit-btn" onclick="checkAnswer(1)">提交勘测报告</button>
+            </div>
+
+            <div id="puzzle-2" class="puzzle-content">
+                <div class="puzzle-desc">
+                    【阶段 2：实战排雷】 (10x10阵列，共包含 <span style="color:#FF9800;font-weight:bold;">12</span> 颗雷)<br>
+                    点击深蓝色方块呼叫战术菜单：确认安全则选 <span style="color:#4CAF50;">✅</span>，确认是雷则选 <span style="color:#f44336;">🚩</span>。<br>
+                    <span style="color: #FF9800; font-size: 0.9em;">警告：如果对藏有地雷的方块下达了“安全”指令，将引发爆炸并重置地图！</span>
+                </div>
+                <div id="grid-p2" class="ms-grid"></div>
+                <button class="submit-btn" onclick="checkAnswer(2)">核对排雷结果</button>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+
+        <div class="action-bar">
+            <a href="game2.html" id="prev-btn" class="nav-btn">上一关</a>
+            <button id="next-btn" class="nav-btn" onclick="nextPuzzle()" style="display: none;">下一题</button>
+            <a href="index.html" class="nav-btn">返回大厅</a>
+        </div>
+    </div>
+
+    <script>
+        let currentPuzzle = 1;
+        const totalPuzzles = 2;
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const puzzleContainer = document.getElementById('puzzle-container');
+
+        // ================= 挑战 1 (7x7) 逻辑配置 =================
+        const grid1Data = [
+            [-1, 1, 0, 0, 0, 1,-1], [ 1, 1, 0, 0, 0, 1, 1], [ 0, 0, 1, 1, 1, 0, 0],
+            [ 0, 0, 1,-1, 1, 0, 0], [ 0, 0, 1, 1, 1, 0, 0], [ 1, 1, 0, 0, 0, 1, 1], [-1, 1, 0, 0, 0, 1,-1]
+        ];
+        const mask1Data = [
+            [1, 1, 0, 0, 0, 1, 1], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 1, 1]
+        ];
+        const correctMinesP1 = 5; 
+
+        function initGrid1() {
+            const container = document.getElementById('grid-p1');
+            container.innerHTML = '';
+            for (let r = 0; r < 7; r++) {
+                for (let c = 0; c < 7; c++) {
+                    let cell = document.createElement('div');
+                    if (mask1Data[r][c] === 1) { cell.className = 'ms-cell hidden'; } 
+                    else {
+                        cell.className = 'ms-cell revealed';
+                        let val = grid1Data[r][c];
+                        if (val > 0) { cell.classList.add(`c-${val}`); cell.innerText = val; }
+                    }
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        // ================= 挑战 2 (10x10) 动态交互逻辑 =================
+        const rows2 = 10; const cols2 = 10; const totalMines2 = 12; // 尺寸缩小，雷数调整
+        let grid2 = []; let revealed2 = []; let flags2 = [];
+        let targetR = -1; let targetC = -1; // 记录当前操作的格子坐标
+
+        function initGrid2() {
+            grid2 = Array(rows2).fill().map(() => Array(cols2).fill(0));
+            revealed2 = Array(rows2).fill().map(() => Array(cols2).fill(true));
+            flags2 = Array(rows2).fill().map(() => Array(cols2).fill(false));
+
+            // 1. 随机埋雷
+            let minesPlaced = 0;
+            while(minesPlaced < totalMines2) {
+                let r = Math.floor(Math.random() * rows2);
+                let c = Math.floor(Math.random() * cols2);
+                if(grid2[r][c] !== -1) { grid2[r][c] = -1; minesPlaced++; }
+            }
+
+            // 2. 计算数字
+            for(let r=0; r<rows2; r++) {
+                for(let c=0; c<cols2; c++) {
+                    if(grid2[r][c] === -1) continue;
+                    let count = 0;
+                    for(let i=-1; i<=1; i++) {
+                        for(let j=-1; j<=1; j++) {
+                            let nr=r+i, nc=c+j;
+                            if(nr>=0 && nr<rows2 && nc>=0 && nc<cols2 && grid2[nr][nc] === -1) count++;
+                        }
+                    }
+                    grid2[r][c] = count;
+                }
+            }
+
+            // 3. 掩盖逻辑（隐藏雷和周围的1-2个安全格子）
+            for(let r=0; r<rows2; r++) {
+                for(let c=0; c<cols2; c++) {
+                    if(grid2[r][c] === -1) {
+                        revealed2[r][c] = false; 
+                        let safeNeighbors = [];
+                        for(let i=-1; i<=1; i++) {
+                            for(let j=-1; j<=1; j++) {
+                                let nr=r+i, nc=c+j;
+                                if(nr>=0 && nr<rows2 && nc>=0 && nc<cols2 && grid2[nr][nc] !== -1) {
+                                    safeNeighbors.push({r: nr, c: nc});
+                                }
+                            }
+                        }
+                        if(safeNeighbors.length > 0) {
+                            safeNeighbors.sort(() => Math.random() - 0.5);
+                            revealed2[safeNeighbors[0].r][safeNeighbors[0].c] = false;
+                            if(safeNeighbors.length > 1 && Math.random() > 0.4) {
+                                revealed2[safeNeighbors[1].r][safeNeighbors[1].c] = false;
+                            }
+                        }
+                    }
+                }
+            }
+            renderGrid2();
+        }
+
+        // 渲染 10x10 网格
+        function renderGrid2() {
+            const container = document.getElementById('grid-p2');
+            container.innerHTML = '';
+            for(let r=0; r<rows2; r++) {
+                for(let c=0; c<cols2; c++) {
+                    let cell = document.createElement('div');
+                    if (!revealed2[r][c]) {
+                        cell.className = 'ms-cell hidden';
+                        if (flags2[r][c]) cell.innerText = '🚩';
+                        
+                        // 点击调出菜单
+                        cell.onclick = (e) => {
+                            e.stopPropagation(); // 阻止冒泡
+                            showActionMenu(r, c, e);
+                        };
+                    } else {
+                        cell.className = 'ms-cell revealed';
+                        let val = grid2[r][c];
+                        if (val > 0) {
+                            cell.classList.add(`c-${val}`);
+                            cell.innerText = val;
+                        }
+                    }
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        // 显示悬浮菜单
+        function showActionMenu(r, c, event) {
+            targetR = r; targetC = c;
+            const popup = document.getElementById('action-popup');
+            popup.style.display = 'flex';
+            
+            // 获取点击的方块的坐标，并将菜单定位在其正上方
+            const cellRect = event.target.getBoundingClientRect();
+            popup.style.left = (cellRect.left + cellRect.width / 2) + 'px';
+            popup.style.top = cellRect.top + 'px';
+        }
+
+        // 隐藏菜单
+        document.addEventListener('click', () => {
+            document.getElementById('action-popup').style.display = 'none';
+        });
+
+        // 处理“安全”或“插旗”指令
+        function handleCellAction(actionType) {
+            if(targetR === -1 || targetC === -1) return;
+
+            if (actionType === 'flag') {
+                flags2[targetR][targetC] = !flags2[targetR][targetC];
+                renderGrid2();
+            } else if (actionType === 'safe') {
+                // 判断是否踩雷
+                if (grid2[targetR][targetC] === -1) {
+                    // 爆炸动画和重置逻辑
+                    puzzleContainer.classList.add('shake');
+                    showFeedback("💥 轰！！你把地雷当成安全区了！地图即将重新生成...", "error");
+                    
+                    // 1秒后移除震动并重置
+                    setTimeout(() => {
+                        puzzleContainer.classList.remove('shake');
+                        initGrid2();
+                        feedbackEl.innerText = "";
+                    }, 1500);
+                } else {
+                    // 确实安全，变为翻开状态
+                    revealed2[targetR][targetC] = true;
+                    flags2[targetR][targetC] = false; // 如果之前有旗子则取消
+                    renderGrid2();
+                    showFeedback("✅ 安全区域确认！", "correct");
+                }
+            }
+            targetR = -1; targetC = -1; // 重置目标
+        }
+
+        // ================= 逻辑交互控制 =================
+        function updateNavButtons() {
+            if (currentPuzzle === 1) {
+                prevBtn.style.display = "inline-block";
+                prevBtn.innerText = "上一关";
+                prevBtn.onclick = () => { window.location.href = 'game2.html'; };
+                nextBtn.style.display = "none";
+            } else if (currentPuzzle === 2) {
+                prevBtn.innerText = "上一题";
+                prevBtn.onclick = prevPuzzle;
+                nextBtn.style.display = "none";
+            }
+        }
+
+        function checkAnswer(puzzleNum) {
+            if (puzzleNum === 1) {
+                const ans = parseInt(document.getElementById('ans-p1').value);
+                if (ans === correctMinesP1) {
+                    showFeedback("✔️ 勘测准确！你用敏锐的逻辑找出了5颗隐藏的地雷。", "correct");
+                    nextBtn.style.display = "inline-block";
+                    nextBtn.innerText = "进入实战排雷";
+                } else {
+                    showFeedback("❌ 数量不对哦。💡 提示：重点观察四个角，以及数字0旁边的格子！", "error");
+                }
+            } else if (puzzleNum === 2) {
+                let isPerfect = true;
+                let flaggedCount = 0;
+                for(let r=0; r<rows2; r++){
+                    for(let c=0; c<cols2; c++){
+                        if(flags2[r][c]) flaggedCount++;
+                        if ((grid2[r][c] === -1 && !flags2[r][c]) || (grid2[r][c] !== -1 && flags2[r][c])) {
+                            isPerfect = false;
+                        }
+                    }
+                }
+                
+                if (flaggedCount === 0) {
+                    showFeedback("⚠️ 请先点击深蓝色方块，利用战术菜单插上旗帜！", "error");
+                } else if (isPerfect) {
+                    showFeedback(`🏆 太牛了！你精准排除了所有的 ${totalMines2} 颗地雷，恭喜完成所有闯关挑战！`, "correct");
+                    nextBtn.style.display = "inline-block";
+                    nextBtn.innerText = "🎉 载誉返回大厅";
+                    nextBtn.onclick = () => { window.location.href = 'index.html'; };
+                } else {
+                    showFeedback("❌ 有雷漏掉了，或者不小心标错了安全区！仔细看看周围的数字。", "error");
+                }
+            }
+        }
+
+        function nextPuzzle() {
+            if (currentPuzzle < totalPuzzles) {
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.remove('active');
+                currentPuzzle++;
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.add('active');
+                document.getElementById('stage-indicator').innerText = `进度：${currentPuzzle} / ${totalPuzzles}`;
+                feedbackEl.innerHTML = ""; 
+                updateNavButtons();
+            }
+        }
+
+        function prevPuzzle() {
+            if (currentPuzzle > 1) {
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.remove('active');
+                currentPuzzle--;
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.add('active');
+                document.getElementById('stage-indicator').innerText = `进度：${currentPuzzle} / ${totalPuzzles}`;
+                feedbackEl.innerHTML = ""; 
+                updateNavButtons();
+            }
+        }
+
+        function showFeedback(msg, type) {
+            feedbackEl.innerText = msg;
+            feedbackEl.className = type === "correct" ? "correct-text" : "error-text";
+        }
+
+        window.onload = () => {
+            initGrid1();
+            initGrid2();
+            updateNavButtons();
+        };
+    </script>
+</body>
+</html>

@@ -3,102 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>关卡一：逻辑迷宫</title>
+    <title>第一关：逻辑之星 - 趣味奥数闯关大挑战</title>
     <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            overflow: hidden;
+        :root {
+            --bg-deep: #010515; 
+            --bg-mid: #0a193c;
+            --highlight-cyan: #00f2ff; 
+            --highlight-blue: #0a99ff; 
+            --text-light: #e0f7fa; 
+            --glass-bg: rgba(10, 25, 60, 0.7);
+            --correct-color: #4CAF50;
+            --error-color: #ff5252;
         }
 
-        /* 延续主页背景 */
-        .bg-image {
-            background-image: url('image_0.png'); 
-            height: 100%; 
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
-            position: relative;
+        body, html {
+            height: 100%; margin: 0;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            overflow: hidden; 
+            background: radial-gradient(circle at center, var(--bg-mid) 0%, var(--bg-deep) 100%); 
+            color: var(--text-light);
+        }
+
+        /* 纯CSS科技网格背景 */
+        .tech-grid {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), 
+                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px; z-index: 0;
         }
 
         .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* 稍深的遮罩，聚焦游戏 */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 50px;
+            height: 100%; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; position: relative; z-index: 10;
         }
 
-        .game-title {
-            color: #FF9800; /* 亮橙色 */
-            font-size: 2.5em;
-            margin: 0 0 30px 0;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        .header-bar {
+            width: 90%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center;
+            margin-top: 20px; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid rgba(0, 242, 255, 0.2);
         }
 
-        /* 核心游戏容器：干净、白色、巨大 */
-        #game-area {
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            width: 90%;
-            max-width: 1000px;
-            height: 70vh; /* 占据可视高度的70% */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            border: 5px solid white;
-            color: #555;
-            font-size: 1.5em;
-            position: relative;
-            overflow: hidden; /* 方便未来在此区域做 Canvas 或 SVG */
+        .game-title { color: var(--highlight-cyan); font-size: 2.2em; margin: 0; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+        .mission-status { color: var(--highlight-blue); font-size: 1.1em; letter-spacing: 1px; font-weight: bold; }
+
+        /* 核心答题区域 - 玻璃质感大屏 */
+        #puzzle-container {
+            background: rgba(15, 30, 60, 0.6);
+            border: 2px solid rgba(0, 242, 255, 0.3);
+            border-radius: 20px; width: 90%; max-width: 1000px; height: 65vh; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 242, 255, 0.1);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            position: relative; padding: 40px; box-sizing: border-box;
         }
 
-        .back-btn { 
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            display: inline-block; 
-            padding: 15px 35px; 
-            background-color: #2196F3; /* 蓝色按钮 */
-            color: white; 
-            text-decoration: none; 
-            border-radius: 50px; 
-            font-size: 1.2em;
-            font-weight: bold; 
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        .puzzle-content {
+            display: none; 
+            flex-direction: column; align-items: center; width: 100%; text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        .puzzle-content.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .puzzle-desc { font-size: 1.3em; margin-bottom: 30px; color: #fff; line-height: 1.6; }
+
+        /* 统一输入框样式 */
+        .grid-cell {
+            width: 80px; height: 80px; background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--highlight-blue); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2em; font-weight: bold; color: var(--highlight-cyan);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .input-cell {
+            background: rgba(255, 255, 255, 0.1); border-color: #FF9800; color: #FF9800;
+            width: 100%; height: 100%; border-radius: 8px; border: none; text-align: center;
+            font-size: 1em; font-weight: bold; outline: none; box-sizing: border-box;
+        }
+        .input-cell:focus { box-shadow: inset 0 0 15px rgba(255, 152, 0, 0.5); }
+        .input-cell::placeholder { color: rgba(255, 152, 0, 0.5); }
+
+        /* ---- 第一题布局 ---- */
+        .magic-grid {
+            display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; margin-bottom: 20px;
         }
 
-        .back-btn:hover { 
-            background-color: #1976D2; 
-            transform: scale(1.05);
+        /* ---- 第二题（乘积阵列）布局 ---- */
+        .product-grid {
+            display: grid; 
+            grid-template-columns: 80px 80px 80px 50px; /* 第四列用来放乘积提示 */
+            gap: 10px; margin-bottom: 20px; align-items: center; justify-items: center;
         }
+        .product-label {
+            font-size: 1.5em; font-weight: bold; color: var(--highlight-cyan);
+            text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+        }
+
+        /* 统一提交按钮和反馈区 */
+        .submit-btn {
+            background: linear-gradient(135deg, #0a99ff, #00f2ff); border: none; color: #000;
+            padding: 12px 40px; font-size: 1.3em; font-weight: bold; border-radius: 30px;
+            cursor: pointer; transition: all 0.3s; margin-top: 20px; box-shadow: 0 5px 15px rgba(0, 242, 255, 0.3);
+        }
+        .submit-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0, 242, 255, 0.5); }
+
+        #feedback { margin-top: 20px; font-size: 1.2em; font-weight: bold; height: 30px; }
+        .correct-text { color: var(--correct-color); text-shadow: 0 0 10px rgba(76, 175, 80, 0.5); }
+        .error-text { color: var(--error-color); text-shadow: 0 0 10px rgba(255, 82, 82, 0.5); }
+
+        /* ---- 右下角操作区 ---- */
+        .action-bar {
+            position: absolute; bottom: 60px; right: 5%; display: flex; gap: 15px; z-index: 100;
+        }
+        
+        .nav-btn {
+            display: inline-block; padding: 12px 25px; 
+            background-color: var(--glass-bg); color: var(--text-light); 
+            text-decoration: none; border-radius: 10px; font-size: 1.1em; font-weight: bold; 
+            transition: all 0.2s; border: 1px solid rgba(0, 242, 255, 0.3); cursor: pointer;
+        }
+        .nav-btn:hover { background-color: rgba(20, 60, 120, 0.9); border-color: var(--highlight-cyan); color: var(--highlight-cyan); }
+        
+        #prev-btn, #next-btn {
+            background-color: rgba(0, 242, 255, 0.15); 
+            border-color: var(--highlight-cyan);
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="bg-image">
-        <div class="overlay">
-            <h2 class="game-title">🧩 关卡一：逻辑迷宫</h2>
+    <div class="tech-grid"></div>
+
+    <div class="overlay">
+        <div class="header-bar">
+            <h2 class="game-title">🧩 第一关：逻辑之星</h2>
+            <div class="mission-status" id="stage-indicator">进度：1 / 2</div>
+        </div>
+        
+        <div id="puzzle-container">
             
-            <div id="game-area">
-                <div style="text-align: center;">
-                    <p style="font-size: 2em; margin-bottom: 10px;">🌟</p>
-                    <p>（在此处加载游戏脚本）</p>
-                    <p style="color: #888; font-size: 0.8em;">等待迎接挑战...</p>
+            <div id="puzzle-1" class="puzzle-content active">
+                <div class="puzzle-desc">
+                    【挑战 1】：在下图中 A、B、C、D 处填上适当的数，使下图成为一个<strong>三阶幻方</strong>。<br>
+                    <span style="font-size: 0.8em; color: #aaa;">（提示：每行、每列、每条对角线的三个数之和都相等哦！）</span>
                 </div>
+                <div class="magic-grid">
+                    <div class="grid-cell"><input type="text" id="ans-A" class="input-cell" maxlength="2" placeholder="A"></div>
+                    <div class="grid-cell">12</div>
+                    <div class="grid-cell"><input type="text" id="ans-D" class="input-cell" maxlength="2" placeholder="D"></div>
+                    
+                    <div class="grid-cell"><input type="text" id="ans-B" class="input-cell" maxlength="2" placeholder="B"></div>
+                    <div class="grid-cell">15</div>
+                    <div class="grid-cell">20</div>
+                    
+                    <div class="grid-cell">16</div>
+                    <div class="grid-cell"><input type="text" id="ans-C" class="input-cell" maxlength="2" placeholder="C"></div>
+                    <div class="grid-cell">11</div>
+                </div>
+                <button class="submit-btn" onclick="checkAnswer(1)">验证逻辑</button>
             </div>
 
-            <a href="index.html" class="back-btn">🔙 返回主界面</a>
+            <div id="puzzle-2" class="puzzle-content">
+                <div class="puzzle-desc">
+                    【挑战 2】：将 <strong>1~9</strong> 这 9 个不同的数填入 3×3 表格中。<br>
+                    使得第 1、2 行三数的<strong>乘积</strong>分别是 70、24，第 1、2 列三数的<strong>乘积</strong>分别是 21、72。
+                </div>
+                
+                <div class="product-grid">
+                    <div class="grid-cell"><input type="text" id="p2-11" class="input-cell" maxlength="1"></div>
+                    <div class="grid-cell"><input type="text" id="p2-12" class="input-cell" maxlength="1"></div>
+                    <div class="grid-cell"><input type="text" id="p2-13" class="input-cell" maxlength="1"></div>
+                    <div class="product-label">70</div>
+
+                    <div class="grid-cell"><input type="text" id="p2-21" class="input-cell" maxlength="1"></div>
+                    <div class="grid-cell"><input type="text" id="p2-22" class="input-cell" maxlength="1"></div>
+                    <div class="grid-cell"><input type="text" id="p2-23" class="input-cell" maxlength="1"></div>
+                    <div class="product-label">24</div>
+
+                    <div class="grid-cell"><input type="text" id="p2-31" class="input-cell" maxlength="1"></div>
+                    <div class="grid-cell"><input type="text" id="p2-32" class="input-cell" maxlength="1"></div>
+                    <div class="grid-cell"><input type="text" id="p2-33" class="input-cell" maxlength="1"></div>
+                    <div></div> <div class="product-label" style="margin-top: 5px;">21</div>
+                    <div class="product-label" style="margin-top: 5px;">72</div>
+                    <div></div>
+                    <div></div>
+                </div>
+
+                <button class="submit-btn" onclick="checkAnswer(2)">验证逻辑</button>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+
+        <div class="action-bar">
+            <button id="prev-btn" class="nav-btn" onclick="prevPuzzle()" style="display: none;">上一题</button>
+            <button id="next-btn" class="nav-btn" onclick="nextPuzzle()">下一题</button>
+            <a href="index.html" class="nav-btn">返回游戏大厅</a>
         </div>
     </div>
 
+    <script>
+        let currentPuzzle = 1;
+        const totalPuzzles = 2;
+        let isPuzzle2Solved = false;
+
+        // 第一题答案
+        const correctA = "19";
+        const correctB = "10";
+        const correctC = "18";
+        const correctD = "14";
+        
+        // 第二题乘积阵列正确答案
+        const correctP2 = ["7", "2", "5", "1", "4", "6", "3", "9", "8"];
+
+        const feedbackEl = document.getElementById('feedback');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        // 统一控制底部导航按钮状态
+        function updateNavButtons() {
+            if (currentPuzzle === 1) {
+                prevBtn.style.display = "none";
+                nextBtn.style.display = "inline-block";
+                nextBtn.innerText = "下一题";
+                nextBtn.onclick = nextPuzzle;
+            } else if (currentPuzzle === 2) {
+                prevBtn.style.display = "inline-block";
+                if (isPuzzle2Solved) {
+                    nextBtn.style.display = "inline-block";
+                    nextBtn.innerText = "完成通关";
+                    nextBtn.onclick = function() { window.location.href = 'index.html'; };
+                } else {
+                    nextBtn.style.display = "none";
+                }
+            }
+        }
+
+        // 验证答案
+        function checkAnswer(puzzleNum) {
+            if (puzzleNum === 1) {
+                const valA = document.getElementById('ans-A').value.trim();
+                const valB = document.getElementById('ans-B').value.trim();
+                const valC = document.getElementById('ans-C').value.trim();
+                const valD = document.getElementById('ans-D').value.trim();
+
+                if (valA === correctA && valB === correctB && valC === correctC && valD === correctD) {
+                    showFeedback("✔️ 回答正确！阵列已完全激活，可以进入下一题。", "correct");
+                } else {
+                    showFeedback("❌ 不对哦，再检查一下？提示：试试先算出从左下到右上的对角线和。", "error");
+                }
+            } else if (puzzleNum === 2) {
+                // 获取第二题9个格子的输入值
+                let userAnsP2 = [];
+                for(let r=1; r<=3; r++){
+                    for(let c=1; c<=3; c++){
+                        userAnsP2.push(document.getElementById(`p2-${r}${c}`).value.trim());
+                    }
+                }
+
+                // 判空
+                if (userAnsP2.includes("")) {
+                    showFeedback("⚠️ 请先把所有格子都填上数字 1~9 哦！", "error");
+                    return;
+                }
+
+                // 比对答案
+                let isCorrect = userAnsP2.every((val, index) => val === correctP2[index]);
+                
+                if (isCorrect) {
+                    isPuzzle2Solved = true;
+                    showFeedback("🏆 完美解密！你已成功破解本关所有谜题！", "correct");
+                    updateNavButtons(); 
+                } else {
+                    showFeedback("❌ 数字排列不对哦。💡 提示：找突破口！70和21有一个公因数，应该填在左上角的交叉点！", "error");
+                }
+            }
+        }
+
+        // 切换下一题
+        function nextPuzzle() {
+            if (currentPuzzle < totalPuzzles) {
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.remove('active');
+                currentPuzzle++;
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.add('active');
+                
+                document.getElementById('stage-indicator').innerText = `进度：${currentPuzzle} / ${totalPuzzles}`;
+                feedbackEl.innerHTML = ""; 
+                updateNavButtons();
+            }
+        }
+
+        // 切换上一题
+        function prevPuzzle() {
+            if (currentPuzzle > 1) {
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.remove('active');
+                currentPuzzle--;
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.add('active');
+                
+                document.getElementById('stage-indicator').innerText = `进度：${currentPuzzle} / ${totalPuzzles}`;
+                feedbackEl.innerHTML = ""; 
+                updateNavButtons();
+            }
+        }
+
+        function showFeedback(msg, type) {
+            feedbackEl.innerText = msg;
+            feedbackEl.className = type === "correct" ? "correct-text" : "error-text";
+        }
+
+        window.onload = updateNavButtons;
+    </script>
 </body>
 </html>

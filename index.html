@@ -14,18 +14,20 @@
         }
 
         body, html {
-            height: 100%;
+            min-height: 100vh; /* 确保最小高度为满屏 */
             margin: 0;
             font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            overflow: hidden; /* 防止背景元素掉落引起滚动条 */
+            overflow-x: hidden; /* 防止横向滚动条 */
+            overflow-y: auto; /* 允许纵向滑动 */
             background: radial-gradient(circle at center, var(--bg-mid) 0%, var(--bg-deep) 100%);
+            background-attachment: fixed; /* 背景固定，不随内容滚动 */
             color: var(--text-light);
-            position: relative; /* 为绝对定位的署名提供参照 */
+            position: relative; 
         }
 
         /* 数学符号雨的容器，层级设为0，并在最底层 */
         #math-rain {
-            position: absolute;
+            position: fixed; /* 改为fixed，确保滚动时雨滴全屏覆盖 */
             top: 0;
             left: 0;
             width: 100%;
@@ -38,7 +40,7 @@
         /* 单个下落符号的动画定义 */
         .math-symbol {
             position: absolute;
-            color: rgba(0, 242, 255, 0.2); /* 半透明的科技青色 */
+            color: rgba(0, 242, 255, 0.2); 
             font-weight: bold;
             font-family: 'Times New Roman', serif;
             animation: fall linear infinite;
@@ -51,20 +53,22 @@
             100% { transform: translateY(110vh); opacity: 0; }
         }
 
-        /* 主体内容容器，层级设为10，确保浮在背景雨的上方 */
+        /* 主体内容容器 */
         .content-wrapper {
             position: relative;
             z-index: 10; 
-            height: 100%;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 50px 20px 80px 20px; /* 增加上下内边距，方便滚动到底部 */
+            box-sizing: border-box;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 50px;
             text-shadow: 0 0 15px var(--highlight-cyan);
         }
 
@@ -85,8 +89,9 @@
         .game-container {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 30px; /* 稍微缩小间距以适应更多卡片 */
             flex-wrap: wrap;
+            max-width: 1200px;
         }
 
         /* 科技感玻璃质感卡片 */
@@ -94,11 +99,11 @@
             background: var(--glass-bg); 
             border: 2px solid rgba(0, 242, 255, 0.2);
             border-radius: 15px;
-            padding: 50px 30px;
-            width: 260px;
+            padding: 40px 20px;
+            width: 240px; /* 稍微调窄一点 */
             text-decoration: none;
             color: var(--text-light);
-            font-size: 1.6em;
+            font-size: 1.5em;
             font-weight: bold;
             text-align: center;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); 
@@ -114,7 +119,7 @@
         }
 
         .game-card:hover {
-            transform: translateY(-15px) scale(1.03);
+            transform: translateY(-10px) scale(1.03);
             background: rgba(15, 40, 90, 0.8);
             border-color: var(--highlight-cyan); 
             box-shadow: 0 0 40px rgba(0, 242, 255, 0.4);
@@ -123,11 +128,11 @@
 
         .game-card .icon {
             font-size: 2.8em;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             filter: drop-shadow(0 0 5px var(--highlight-cyan));
         }
 
-        /* 作者署名样式，固定在右下角 */
+        /* 作者署名样式，固定在页面最底部 */
         .author-signature {
             position: absolute;
             bottom: 20px;
@@ -138,6 +143,34 @@
             text-shadow: 0 0 8px rgba(0, 242, 255, 0.4);
             z-index: 10;
             font-style: italic;
+        }
+
+        /* 📱 手机端自适应优化 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2em; /* 缩小标题 */
+                letter-spacing: 1px;
+            }
+            .header p {
+                font-size: 1em;
+            }
+            .content-wrapper {
+                padding: 30px 15px 70px 15px;
+            }
+            .game-container {
+                gap: 20px;
+            }
+            .game-card {
+                width: 90%; /* 手机端单列显示，卡片拉宽 */
+                max-width: 320px;
+                padding: 30px 20px;
+                font-size: 1.4em;
+            }
+            .author-signature {
+                right: 50%;
+                transform: translateX(50%); /* 手机端居中显示作者 */
+                font-size: 1em;
+            }
         }
     </style>
 </head>
@@ -164,15 +197,27 @@
                 <span class="icon">🚀</span>
                 <span>第三关：<br>雷区探秘</span>
             </a>
+            <a href="game4.html" class="game-card">
+                <span class="icon">🧊</span>
+                <span>第四关：<br>空间折叠</span>
+            </a>
+            <a href="game5.html" class="game-card">
+                <span class="icon">⚖️</span>
+                <span>第五关：<br>天平谜题</span>
+            </a>
+            <a href="game6.html" class="game-card">
+                <span class="icon">👑</span>
+                <span>第六关：<br>巅峰对决</span>
+            </a>
         </div>
+        
+        <div class="author-signature">作者：数学张老师</div>
     </div>
-
-    <div class="author-signature">作者：数学张老师</div>
 
     <script>
         const symbols = ['π', '∑', '∞', '∫', '×', '÷', '+', '-', '=', '√', '∠', '∵', '∴', '≈', '≠', 'α', 'β', 'θ', 'x²', 'y³'];
         const rainContainer = document.getElementById('math-rain');
-        const numSymbols = 60; 
+        const numSymbols = 50; // 稍微减少一点数量，保证手机端性能流畅
 
         for (let i = 0; i < numSymbols; i++) {
             let sym = document.createElement('div');

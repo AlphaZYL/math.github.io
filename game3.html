@@ -157,7 +157,7 @@
 
     <div class="overlay">
         <div class="header-bar">
-            <h2 class="game-title">🚀 第三关：雷区探秘</h2>
+            <h2 class="game-title">💣 第三关：雷区探秘</h2>
             <div class="mission-status" id="stage-indicator">进度：1 / 2</div>
         </div>
         
@@ -323,9 +323,13 @@
         function updateNavButtons() {
             if (currentPuzzle === 1) {
                 prevBtn.style.display = "inline-block"; prevBtn.innerText = "上一关";
-                prevBtn.onclick = () => { window.location.href = 'game2.html'; }; nextBtn.style.display = "none";
+                prevBtn.href = 'game2.html'; prevBtn.onclick = null;
+                nextBtn.style.display = "inline-block"; nextBtn.innerText = "下一题";
+                nextBtn.onclick = nextPuzzle;
             } else if (currentPuzzle === 2) {
-                prevBtn.innerText = "上一题"; prevBtn.onclick = prevPuzzle; nextBtn.style.display = "none";
+                prevBtn.innerText = "上一题"; prevBtn.href = '#';
+                prevBtn.onclick = (event) => { event.preventDefault(); prevPuzzle(); };
+                nextBtn.style.display = "none";
             }
         }
 
@@ -334,7 +338,6 @@
                 const ans = parseInt(document.getElementById('ans-p1').value);
                 if (ans === correctMinesP1) {
                     showFeedback("✔️ 勘测准确！你用敏锐的逻辑找出了5颗隐藏的地雷。", "correct");
-                    nextBtn.style.display = "inline-block"; nextBtn.innerText = "进入实战排雷";
                 } else { showFeedback("❌ 数量不对哦。💡 提示：重点观察四个角，以及数字0旁边的格子！", "error"); }
             } else if (puzzleNum === 2) {
                 let isPerfect = true; let flaggedCount = 0;

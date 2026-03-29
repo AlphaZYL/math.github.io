@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第四关：文字解密 - 趣味奥数闯关大挑战</title>
+    <style>
+        :root {
+            --bg-deep: #010515; 
+            --bg-mid: #0a193c;
+            --highlight-cyan: #00f2ff; 
+            --highlight-blue: #0a99ff; 
+            --text-light: #e0f7fa; 
+            --glass-bg: rgba(10, 25, 60, 0.7);
+            --correct-color: #4CAF50;
+            --error-color: #ff5252;
+        }
+
+        body, html {
+            min-height: 100vh; margin: 0;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            overflow-x: hidden; overflow-y: auto;
+            background: radial-gradient(circle at center, var(--bg-mid) 0%, var(--bg-deep) 100%); 
+            background-attachment: fixed; color: var(--text-light);
+        }
+
+        .tech-grid {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), 
+                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px; z-index: 0; pointer-events: none;
+        }
+
+        .overlay {
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px 10px; position: relative; z-index: 10;
+        }
+
+        .header-bar {
+            width: 90%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center;
+            margin-top: 10px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+        }
+
+        .game-title { color: var(--highlight-cyan); font-size: 2.2em; margin: 0; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+        .mission-status { color: var(--highlight-blue); font-size: 1.1em; letter-spacing: 1px; font-weight: bold; }
+
+        #puzzle-container {
+            background: rgba(15, 30, 60, 0.6); border: 2px solid rgba(0, 242, 255, 0.3);
+            border-radius: 20px; width: 95%; max-width: 900px; min-height: 60vh; height: auto;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 242, 255, 0.1);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            position: relative; padding: 40px 20px; box-sizing: border-box; margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .puzzle-desc { font-size: 1.3em; margin-bottom: 30px; color: #fff; line-height: 1.6; text-align: center; }
+
+        /* 竖式排版容器 */
+        .math-wrapper {
+            display: flex; justify-content: center; gap: 80px; flex-wrap: wrap; margin-bottom: 40px;
+        }
+
+        .vertical-math {
+            font-size: 2em; font-family: 'PingFang SC', sans-serif; font-weight: bold;
+            color: var(--highlight-cyan); text-shadow: 0 0 8px rgba(0, 242, 255, 0.4);
+            border-collapse: collapse; letter-spacing: 5px;
+        }
+
+        .vertical-math td { width: 50px; text-align: center; padding: 5px 0; }
+        .add-line td { border-bottom: 3px solid var(--highlight-blue); padding-bottom: 10px; }
+        .result-line td { padding-top: 10px; color: #FF9800; text-shadow: 0 0 8px rgba(255, 152, 0, 0.4); }
+
+        /* 答案独立检验区 */
+        .pwd-container { 
+            display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px;
+        }
+        
+        .char-block {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            background: rgba(0, 0, 0, 0.3); padding: 15px 10px; border-radius: 12px;
+            border: 1px dashed rgba(0, 242, 255, 0.3);
+        }
+
+        .char-label {
+            font-size: 1.6em; font-weight: bold; color: #fff; 
+            text-shadow: 0 0 5px var(--highlight-cyan);
+        }
+
+        .pwd-box {
+            width: 55px; height: 70px; background: rgba(10, 25, 60, 0.8);
+            border: 2px solid var(--highlight-blue); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+        .pwd-box:focus-within { border-color: var(--highlight-cyan); box-shadow: 0 0 15px var(--highlight-cyan); transform: translateY(-3px); }
+        .pwd-box.locked { border-color: var(--correct-color); box-shadow: 0 0 10px var(--correct-color); background: rgba(76, 175, 80, 0.1); }
+        
+        .pwd-input {
+            width: 100%; height: 100%; background: transparent; border: none;
+            color: var(--highlight-cyan); font-size: 2.2em; font-weight: bold;
+            text-align: center; outline: none;
+        }
+        .pwd-input:disabled { color: var(--correct-color); text-shadow: 0 0 10px var(--correct-color); }
+
+        .check-btn {
+            background: linear-gradient(135deg, #0a99ff, #00f2ff); border: none; color: #000;
+            padding: 5px 12px; font-size: 0.9em; font-weight: bold; border-radius: 15px;
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 3px 8px rgba(0, 242, 255, 0.3);
+        }
+        .check-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 12px rgba(0, 242, 255, 0.5); }
+
+        .status-icon { height: 24px; font-size: 1.2em; display: flex; align-items: center; justify-content: center;}
+
+        #feedback { margin-top: 10px; font-size: 1.3em; font-weight: bold; min-height: 30px; text-align: center; padding: 0 10px;}
+        .correct-text { color: var(--correct-color); text-shadow: 0 0 10px rgba(76, 175, 80, 0.5); animation: fadeIn 0.5s;}
+        
+        .action-bar {
+            position: relative; margin-top: 10px; margin-bottom: 40px; display: flex; 
+            gap: 15px; z-index: 100; flex-wrap: wrap; justify-content: center;
+        }
+        .nav-btn {
+            display: inline-block; padding: 12px 25px; background-color: var(--glass-bg); color: var(--text-light); 
+            text-decoration: none; border-radius: 10px; font-size: 1.1em; font-weight: bold; border: 1px solid rgba(0, 242, 255, 0.3);
+        }
+        .nav-btn:hover { background-color: rgba(20, 60, 120, 0.9); border-color: var(--highlight-cyan); color: var(--highlight-cyan); }
+        #next-btn { background-color: rgba(0, 242, 255, 0.15); border-color: var(--highlight-cyan); }
+
+        /* 📱 手机端适配 */
+        @media (max-width: 768px) {
+            .game-title { font-size: 1.6em; }
+            .header-bar { flex-direction: column; gap: 10px; text-align: center; }
+            #puzzle-container { padding: 25px 10px; }
+            .puzzle-desc { font-size: 1.1em; }
+            .math-wrapper { gap: 30px; margin-bottom: 20px;}
+            .vertical-math { font-size: 1.4em; letter-spacing: 2px;}
+            .vertical-math td { width: 30px; }
+            
+            .pwd-container { gap: 8px; }
+            .char-block { padding: 10px 5px; gap: 6px; }
+            .char-label { font-size: 1.3em; }
+            .pwd-box { width: 45px; height: 60px; }
+            .pwd-input { font-size: 1.8em; }
+            .check-btn { font-size: 0.8em; padding: 4px 8px; }
+            
+            .nav-btn { font-size: 1em; padding: 10px 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="tech-grid"></div>
+    <div class="overlay">
+        <div class="header-bar">
+            <h2 class="game-title">🔢 第四关：文字解密</h2>
+            <div class="mission-status">逐个突破汉字密码</div>
+        </div>
+        
+        <div id="puzzle-container">
+            <div class="puzzle-desc">
+                在下面的两个加法竖式中，<strong>相同的汉字代表相同的数字，不同的汉字代表不同的数字</strong>。<br>
+                请推理出每个汉字代表的数字，并<span style="color: #FF9800;">逐一进行检验</span>。
+            </div>
+
+            <div class="math-wrapper">
+                <table class="vertical-math">
+                    <tr><td></td><td>奥</td><td>林</td><td>匹</td><td>克</td></tr>
+                    <tr class="add-line"><td>+</td><td></td><td>运</td><td>动</td><td>会</td></tr>
+                    <tr class="result-line"><td></td><td>2</td><td>0</td><td>0</td><td>8</td></tr>
+                </table>
+
+                <table class="vertical-math">
+                    <tr><td></td><td>克</td><td>匹</td><td>林</td><td>奥</td></tr>
+                    <tr class="add-line"><td>+</td><td></td><td>会</td><td>动</td><td>运</td></tr>
+                    <tr class="result-line"><td></td><td>3</td><td>9</td><td>8</td><td>8</td></tr>
+                </table>
+            </div>
+
+            <div class="pwd-container">
+                <div class="char-block">
+                    <div class="char-label">奥</div>
+                    <div class="pwd-box" id="box-1"><input type="text" id="n1" class="pwd-input" maxlength="1" onkeyup="autoFocus(this, 'n2', null)"></div>
+                    <button class="check-btn" id="btn-1" onclick="checkChar(1, '1')">检验</button>
+                    <div id="status-1" class="status-icon"></div>
+                </div>
+                
+                <div class="char-block">
+                    <div class="char-label">林</div>
+                    <div class="pwd-box" id="box-2"><input type="text" id="n2" class="pwd-input" maxlength="1" onkeyup="autoFocus(this, 'n3', 'n1')"></div>
+                    <button class="check-btn" id="btn-2" onclick="checkChar(2, '2')">检验</button>
+                    <div id="status-2" class="status-icon"></div>
+                </div>
+
+                <div class="char-block">
+                    <div class="char-label">匹</div>
+                    <div class="pwd-box" id="box-3"><input type="text" id="n3" class="pwd-input" maxlength="1" onkeyup="autoFocus(this, 'n4', 'n2')"></div>
+                    <button class="check-btn" id="btn-3" onclick="checkChar(3, '4')">检验</button>
+                    <div id="status-3" class="status-icon"></div>
+                </div>
+
+                <div class="char-block">
+                    <div class="char-label">克</div>
+                    <div class="pwd-box" id="box-4"><input type="text" id="n4" class="pwd-input" maxlength="1" onkeyup="autoFocus(this, 'n5', 'n3')"></div>
+                    <button class="check-btn" id="btn-4" onclick="checkChar(4, '3')">检验</button>
+                    <div id="status-4" class="status-icon"></div>
+                </div>
+
+                <div class="char-block">
+                    <div class="char-label">运</div>
+                    <div class="pwd-box" id="box-5"><input type="text" id="n5" class="pwd-input" maxlength="1" onkeyup="autoFocus(this, 'n6', 'n4')"></div>
+                    <button class="check-btn" id="btn-5" onclick="checkChar(5, '7')">检验</button>
+                    <div id="status-5" class="status-icon"></div>
+                </div>
+
+                <div class="char-block">
+                    <div class="char-label">动</div>
+                    <div class="pwd-box" id="box-6"><input type="text" id="n6" class="pwd-input" maxlength="1" onkeyup="autoFocus(this, 'n7', 'n5')"></div>
+                    <button class="check-btn" id="btn-6" onclick="checkChar(6, '6')">检验</button>
+                    <div id="status-6" class="status-icon"></div>
+                </div>
+
+                <div class="char-block">
+                    <div class="char-label">会</div>
+                    <div class="pwd-box" id="box-7"><input type="text" id="n7" class="pwd-input" maxlength="1" onkeyup="autoFocus(this, null, 'n6')"></div>
+                    <button class="check-btn" id="btn-7" onclick="checkChar(7, '5')">检验</button>
+                    <div id="status-7" class="status-icon"></div>
+                </div>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+
+        <div class="action-bar">
+            <a href="game3.html" class="nav-btn">上一关</a>
+            <a href="game5.html" id="next-btn" class="nav-btn" style="display: none;">下一关</a>
+            <a href="index.html" class="nav-btn">返回游戏大厅</a>
+        </div>
+    </div>
+
+    <script>
+        // 输入框限制只能输入数字，且保留退格跳格功能
+        function autoFocus(current, nextFieldID, prevFieldID) {
+            current.value = current.value.replace(/[^0-9]/g, '');
+            if (current.value.length >= current.maxLength && nextFieldID) {
+                // 如果下一个输入框没被锁定，就跳过去
+                const nextInput = document.getElementById(nextFieldID);
+                if(!nextInput.disabled) nextInput.focus();
+            }
+            if (event.key === "Backspace" && current.value.length === 0 && prevFieldID) {
+                const prevInput = document.getElementById(prevFieldID);
+                if(!prevInput.disabled) prevInput.focus();
+            }
+        }
+
+        let solvedCount = 0;
+
+        // 独立检验单个汉字
+        function checkChar(id, correctVal) {
+            const inputEl = document.getElementById('n' + id);
+            const boxEl = document.getElementById('box-' + id);
+            const btnEl = document.getElementById('btn-' + id);
+            const statusEl = document.getElementById('status-' + id);
+            
+            const val = inputEl.value.trim();
+
+            if (val === '') {
+                statusEl.innerHTML = '⚠️';
+                setTimeout(() => { statusEl.innerHTML = ''; }, 1000);
+                return;
+            }
+
+            if (val === correctVal) {
+                // 答对了：亮绿灯、锁定输入框、隐藏按钮
+                statusEl.innerHTML = '✅';
+                inputEl.disabled = true;
+                boxEl.classList.add('locked');
+                btnEl.style.visibility = 'hidden'; 
+                
+                solvedCount++;
+                checkAllSolved();
+            } else {
+                // 答错了：亮红灯、清空错误答案
+                statusEl.innerHTML = '❌';
+                inputEl.value = '';
+                setTimeout(() => { 
+                    statusEl.innerHTML = ''; 
+                    inputEl.focus(); 
+                }, 800);
+            }
+        }
+
+        // 检查是否全部通关
+        function checkAllSolved() {
+            if (solvedCount === 7) {
+                const feedbackEl = document.getElementById('feedback');
+                const nextBtn = document.getElementById('next-btn');
+                
+                feedbackEl.innerText = "🏆 太棒了！你像侦探一样找出了所有汉字代表的数字！";
+                feedbackEl.className = "correct-text";
+                nextBtn.style.display = "inline-block"; 
+            }
+        }
+    </script>
+</body>
+</html>

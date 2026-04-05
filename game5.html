@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第五关：概率趣题 - 趣味奥数闯关大挑战</title>
+    <style>
+        :root {
+            --bg-deep: #010515; 
+            --bg-mid: #0a193c;
+            --highlight-cyan: #00f2ff; 
+            --highlight-blue: #0a99ff; 
+            --text-light: #e0f7fa; 
+            --glass-bg: rgba(10, 25, 60, 0.7);
+            --correct-color: #4CAF50;
+            --error-color: #ff5252;
+            --bean-color: #FFEB3B;
+            --collision-color: #FF5722;
+            --go-cell-size: 20px;
+        }
+
+        body, html {
+            min-height: 100vh; margin: 0;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            overflow-x: hidden; overflow-y: auto;
+            background: radial-gradient(circle at center, var(--bg-mid) 0%, var(--bg-deep) 100%); 
+            background-attachment: fixed; color: var(--text-light);
+        }
+
+        .tech-grid {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), 
+                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px; z-index: 0; pointer-events: none;
+        }
+
+        .overlay {
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px 10px; position: relative; z-index: 10;
+        }
+
+        .header-bar {
+            width: 90%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center;
+            margin-top: 10px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+        }
+
+        .game-title { color: var(--highlight-cyan); font-size: 2.2em; margin: 0; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+        .mission-status { color: var(--highlight-blue); font-size: 1.1em; letter-spacing: 1px; font-weight: bold; }
+
+        #puzzle-container {
+            background: rgba(15, 30, 60, 0.6); border: 2px solid rgba(0, 242, 255, 0.3);
+            border-radius: 20px; width: 95%; max-width: 900px; min-height: 60vh; height: auto;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 242, 255, 0.1);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            position: relative; padding: 40px 20px; box-sizing: border-box; margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .puzzle-content {
+            display: none; flex-direction: column; align-items: center; width: 100%; text-align: center;
+        }
+        .puzzle-content.active { display: flex; }
+
+        .puzzle-desc { font-size: 1.2em; margin-bottom: 20px; color: #fff; line-height: 1.6; text-align: left; width: 100%; max-width: 700px; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px; border-left: 4px solid var(--highlight-blue);}
+
+        /* 围棋盘与黄豆样式 */
+        .go-board {
+            display: grid; grid-template-columns: repeat(19, var(--go-cell-size)); gap: 1px;
+            background: rgba(0, 242, 255, 0.3); border: 2px solid var(--highlight-blue);
+            width: fit-content; margin: 10px auto 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); padding: 2px;
+        }
+        
+        .go-cell {
+            background: rgba(10, 25, 60, 0.8); display: flex; align-items: center; justify-content: center;
+            position: relative; transition: all 0.3s ease;
+            width: var(--go-cell-size); height: var(--go-cell-size);
+        }
+        
+        .go-cell.collision {
+            background: rgba(255, 87, 34, 0.4); box-shadow: inset 0 0 8px var(--collision-color);
+        }
+
+        .bean {
+            width: 70%; height: 70%; background: var(--bean-color); border-radius: 50%;
+            box-shadow: 0 0 5px rgba(255, 235, 59, 0.8);
+        }
+
+        .bean.multiple {
+            background: var(--collision-color); color: #fff; font-size: 0.6em; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px var(--collision-color);
+        }
+
+        .bean.drop-in { animation: beanDropIn 0.24s ease-out; }
+        @keyframes beanDropIn {
+            0% { transform: scale(0.2); opacity: 0; }
+            70% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 按钮组 */
+        .btn-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+        .action-btn {
+            background: linear-gradient(135deg, #0a99ff, #00f2ff); border: none; color: #000;
+            padding: 10px 25px; font-size: 1.1em; font-weight: bold; border-radius: 30px;
+            cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(0, 242, 255, 0.3);
+        }
+        .action-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0, 242, 255, 0.5); }
+        .action-btn.secondary { background: rgba(255, 255, 255, 0.1); color: var(--highlight-cyan); border: 1px solid var(--highlight-cyan); }
+        .action-btn.secondary:hover { background: rgba(0, 242, 255, 0.2); }
+
+        /* 解析展示区 */
+        .explanation-box {
+            display: none; background: rgba(10, 25, 60, 0.9); border: 1px solid var(--correct-color);
+            border-radius: 10px; padding: 20px; width: 100%; max-width: 700px; text-align: left;
+            line-height: 1.6; font-size: 1.1em; margin-top: 10px; box-shadow: 0 0 20px rgba(76, 175, 80, 0.2);
+            animation: fadeIn 0.5s ease;
+        }
+        .explanation-box h3 { color: var(--correct-color); margin-top: 0; font-size: 1.3em; }
+        .highlight-text { color: #FF9800; font-weight: bold; font-size: 1.2em;}
+
+        /* 生日模拟器记录区 */
+        .log-box {
+            background: rgba(0, 0, 0, 0.6); border: 1px solid var(--highlight-blue);
+            border-radius: 10px; padding: 15px; width: 100%; max-width: 600px; min-height: 150px;
+            font-family: 'Courier New', Courier, monospace; font-size: 1.1em; color: #fff;
+            text-align: left; overflow-y: auto; margin-bottom: 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+        .log-item { margin-bottom: 8px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 5px;}
+        .log-match { color: var(--collision-color); font-weight: bold; text-shadow: 0 0 5px rgba(255, 87, 34, 0.5); }
+        .log-safe { color: var(--highlight-cyan); }
+
+        .action-bar {
+            position: relative; margin-top: 10px; margin-bottom: 40px; display: flex; 
+            gap: 15px; z-index: 100; flex-wrap: wrap; justify-content: center;
+        }
+        .nav-btn {
+            display: inline-block; padding: 12px 25px; background-color: var(--glass-bg); color: var(--text-light); 
+            text-decoration: none; border-radius: 10px; font-size: 1.1em; font-weight: bold; border: 1px solid rgba(0, 242, 255, 0.3);
+        }
+        .nav-btn:hover { background-color: rgba(20, 60, 120, 0.9); border-color: var(--highlight-cyan); color: var(--highlight-cyan); }
+
+        /* 📱 手机端适配 */
+        @media (max-width: 768px) {
+            :root { --go-cell-size: 16px; }
+            .game-title { font-size: 1.6em; }
+            .header-bar { flex-direction: column; gap: 10px; text-align: center; }
+            #puzzle-container { padding: 25px 15px; }
+            .puzzle-desc { font-size: 1.05em; padding: 10px; }
+            .action-btn { padding: 10px 20px; font-size: 1em; }
+            .explanation-box { font-size: 1em; padding: 15px; }
+            .log-box { font-size: 0.9em; min-height: 120px; }
+            .nav-btn { font-size: 1em; padding: 10px 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="tech-grid"></div>
+    <div class="overlay">
+        <div class="header-bar">
+            <h2 class="game-title">🎲 第五关：概率趣题</h2>
+            <div class="mission-status" id="stage-indicator">挑战：1 / 2</div>
+        </div>
+        
+        <div id="puzzle-container">
+            
+            <div id="puzzle-1" class="puzzle-content active">
+                <div class="puzzle-desc">
+                    【挑战 1：星罗棋布】<br>
+                    在一个 <strong>19×19 的标准围棋盘</strong>（共 361 个交叉点格子）上，随机撒下 <strong>50 颗黄豆</strong>。<br>
+                    假设黄豆都落在了格子里，你觉得<strong>“出现两个或两个以上的黄豆落在同一个格子里”</strong>的概率有多大？
+                </div>
+                
+                <div class="go-board" id="go-board">
+                    </div>
+
+                <div class="btn-group">
+                    <button id="scatter-btn" class="action-btn" onclick="scatterBeans()">🎲 随机撒黄豆</button>
+                    <button class="action-btn secondary" onclick="toggleExplanation(1)">💡 查看概率与解析</button>
+                </div>
+
+                <div id="exp-1" class="explanation-box">
+                    <h3>📊 解析与真相</h3>
+                    <p>直觉往往会欺骗我们！361个格子放50颗黄豆，感觉很空旷对不对？</p>
+                    <p>但实际上，出现“至少两颗黄豆挤在同一格”的概率高达 <span class="highlight-text">约 97.4%</span>！</p>
+                    <p><strong>【数学推理】</strong>我们可以反过来算“所有黄豆都不在同一格”的概率：<br>
+                    第1颗黄豆随便放（361/361）；<br>
+                    第2颗必须避开第1颗（360/361）；<br>
+                    第3颗必须避开前2颗（359/361）...<br>
+                    第50颗黄豆（312/361）。<br>
+                    全部乘起来，互不干扰的概率只有约 2.6%。用 1 减去它，碰撞的概率就是 97.4%！</p>
+                </div>
+            </div>
+
+            <div id="puzzle-2" class="puzzle-content">
+                <div class="puzzle-desc">
+                    【挑战 2：生日对对碰】<br>
+                    假设张老师的班级里一共有 <strong>50 个小朋友</strong>。<br>
+                    一年有 365 天，如果不考虑闰年，在这个班级里，<strong>“至少有两名同学生日是同一天”</strong>的可能性大吗？
+                </div>
+
+                <div class="log-box" id="sim-log">
+                    <div style="color:#aaa;">系统待机中...点击下方按钮开始一次班级生日抽样模拟。</div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="action-btn" onclick="simulateBirthdays()">👥 模拟 50 人班级生日</button>
+                    <button class="action-btn secondary" onclick="toggleExplanation(2)">💡 查看解密</button>
+                </div>
+
+                <div id="exp-2" class="explanation-box">
+                    <h3>📊 解析与奥数秘籍</h3>
+                    <p>这就是大名鼎鼎的<strong>“生日悖论”</strong>！在50人的班级里，有两人同天生日的概率高达 <span class="highlight-text">约 97.0%</span>！</p>
+                    <p style="color: var(--highlight-cyan); border-left: 3px solid var(--highlight-cyan); padding-left: 10px; margin-top: 15px;">
+                        <strong>✨ 奥数秘籍：寻找事物的本质 ✨</strong><br>
+                        你发现了吗？这道题和刚刚的“撒黄豆”本质上是<strong>同一道题</strong>！<br>
+                        一年的 <strong>365 天</strong>，就相当于棋盘上的 <strong>365 个格子</strong>；<br>
+                        班里的 <strong>50 个同学</strong>，就相当于手里的 <strong>50 颗黄豆</strong>。<br>
+                        虽然 361 和 365 稍微差了一点点，但它们的概率模型是完全一致的！透过现象看本质，这就是数学最迷人的地方！
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="action-bar">
+            <button id="prev-btn" class="nav-btn" onclick="prevPuzzle()" style="display: none;">上一题</button>
+            <button id="next-btn" class="nav-btn" onclick="nextPuzzle()">下一题</button>
+            <a href="index.html" class="nav-btn">返回游戏大厅</a>
+        </div>
+    </div>
+
+    <script>
+        let currentPuzzle = 1;
+        const totalPuzzles = 2;
+
+        // 初始化围棋盘 (19x19 = 361个格子)
+        const totalCells = 361;
+        const totalBeans = 50;
+        let isScattering = false;
+        
+        function initGoBoard() {
+            const board = document.getElementById('go-board');
+            board.innerHTML = '';
+            for(let i=0; i<totalCells; i++) {
+                let cell = document.createElement('div');
+                cell.className = 'go-cell';
+                cell.id = 'gocell-' + i;
+                board.appendChild(cell);
+            }
+        }
+
+        function renderGoCell(cellIndex, count) {
+            const cell = document.getElementById('gocell-' + cellIndex);
+            cell.classList.remove('collision');
+            if (count <= 0) {
+                cell.innerHTML = '';
+                return;
+            }
+
+            if (count === 1) {
+                cell.innerHTML = '<div class="bean drop-in"></div>';
+                return;
+            }
+
+            cell.innerHTML = `<div class="bean multiple drop-in">${count}</div>`;
+            cell.classList.add('collision');
+        }
+
+        // 撒黄豆逻辑（动态逐颗演示）
+        function scatterBeans() {
+            if (isScattering) return;
+            isScattering = true;
+            const scatterBtn = document.getElementById('scatter-btn');
+            scatterBtn.disabled = true;
+            scatterBtn.innerText = '⏳ 撒豆中...';
+
+            // 清理旧黄豆
+            for(let i=0; i<totalCells; i++) {
+                const cell = document.getElementById('gocell-' + i);
+                cell.innerHTML = '';
+                cell.classList.remove('collision');
+            }
+
+            let counts = new Array(totalCells).fill(0);
+            let dropIndex = 0;
+            const dropTimer = setInterval(() => {
+                const pos = Math.floor(Math.random() * totalCells);
+                counts[pos]++;
+                renderGoCell(pos, counts[pos]);
+                dropIndex++;
+
+                if (dropIndex >= totalBeans) {
+                    clearInterval(dropTimer);
+                    isScattering = false;
+                    scatterBtn.disabled = false;
+                    scatterBtn.innerText = '🎲 随机撒黄豆';
+                }
+            }, 45);
+        }
+
+        // 模拟生日逻辑
+        function simulateBirthdays() {
+            const logBox = document.getElementById('sim-log');
+            logBox.innerHTML = '<div class="log-item">🔄 正在随机生成 50 名同学的生日...</div>';
+            
+            let birthdays = [];
+            let duplicates = {};
+            
+            // 生成50个生日
+            for(let i=0; i<50; i++) {
+                let day = Math.floor(Math.random() * 365) + 1; // 1 to 365
+                birthdays.push(day);
+            }
+
+            // 统计重复
+            birthdays.forEach(b => {
+                duplicates[b] = (duplicates[b] || 0) + 1;
+            });
+
+            setTimeout(() => {
+                let matchFound = false;
+                // 将天数转换为大概的月份和日期显示（简化处理，按每月30天算作展示效果）
+                for (const [dayStr, count] of Object.entries(duplicates)) {
+                    if (count > 1) {
+                        matchFound = true;
+                        let dayNum = parseInt(dayStr);
+                        let month = Math.ceil(dayNum / 30);
+                        let date = dayNum % 30 === 0 ? 30 : dayNum % 30;
+                        if(month > 12) month = 12;
+                        
+                        logBox.innerHTML += `<div class="log-item log-match">🎯 惊人发现！有 ${count} 名同学都在 ${month}月${date}日 过生日！</div>`;
+                    }
+                }
+
+                if (!matchFound) {
+                    logBox.innerHTML += `<div class="log-item log-safe">🌟 这次模拟很罕见，50个人的生日全都不一样！（只有不到 3% 的概率发生哦）</div>`;
+                }
+                
+                logBox.scrollTop = logBox.scrollHeight;
+            }, 500);
+        }
+
+        // 显示/隐藏解析
+        function toggleExplanation(num) {
+            const exp = document.getElementById('exp-' + num);
+            if (exp.style.display === 'block') {
+                exp.style.display = 'none';
+            } else {
+                exp.style.display = 'block';
+            }
+        }
+
+        // 导航逻辑
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const finishBtn = document.getElementById('finish-btn');
+
+        function updateNavButtons() {
+            document.getElementById('stage-indicator').innerText = `挑战：${currentPuzzle} / ${totalPuzzles}`;
+            if (currentPuzzle === 1) {
+                prevBtn.style.display = "none";
+                nextBtn.style.display = "inline-block";
+                if (finishBtn) finishBtn.style.display = "none";
+            } else if (currentPuzzle === 2) {
+                prevBtn.style.display = "inline-block";
+                nextBtn.style.display = "none";
+                if (finishBtn) finishBtn.style.display = "inline-block";
+            }
+        }
+
+        function nextPuzzle() {
+            if (currentPuzzle < totalPuzzles) {
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.remove('active');
+                currentPuzzle++;
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.add('active');
+                updateNavButtons();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function prevPuzzle() {
+            if (currentPuzzle > 1) {
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.remove('active');
+                currentPuzzle--;
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.add('active');
+                updateNavButtons();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        window.onload = () => {
+            initGoBoard();
+            updateNavButtons();
+        };
+    </script>
+</body>
+</html>

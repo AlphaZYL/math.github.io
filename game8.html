@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第八关：等差数列 - 趣味奥数闯关大挑战</title>
+    <style>
+        :root {
+            --bg-deep: #010515; 
+            --bg-mid: #0a193c;
+            --highlight-cyan: #00f2ff; 
+            --highlight-blue: #0a99ff; 
+            --text-light: #e0f7fa; 
+            --glass-bg: rgba(10, 25, 60, 0.7);
+            --correct-color: #4CAF50;
+            --error-color: #ff5252;
+        }
+
+        body, html {
+            min-height: 100vh; margin: 0;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            overflow-x: hidden; overflow-y: auto;
+            background: radial-gradient(circle at center, var(--bg-mid) 0%, var(--bg-deep) 100%); 
+            background-attachment: fixed; color: var(--text-light);
+        }
+
+        .tech-grid {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), 
+                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px; z-index: 0; pointer-events: none;
+        }
+
+        .overlay {
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px 10px; position: relative; z-index: 10;
+        }
+
+        .header-bar {
+            width: 90%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center;
+            margin-top: 10px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+        }
+
+        .game-title { color: var(--highlight-cyan); font-size: 2.2em; margin: 0; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+        .mission-status { color: var(--highlight-blue); font-size: 1.1em; letter-spacing: 1px; font-weight: bold; }
+
+        #puzzle-container {
+            background: rgba(15, 30, 60, 0.6); border: 2px solid rgba(0, 242, 255, 0.3);
+            border-radius: 20px; width: 95%; max-width: 900px; min-height: 60vh; height: auto;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 242, 255, 0.1);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            position: relative; padding: 40px 20px; box-sizing: border-box; margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .puzzle-content { display: none; flex-direction: column; align-items: center; width: 100%; text-align: center; }
+        .puzzle-content.active { display: flex; }
+
+        .puzzle-desc { 
+            font-size: 1.3em; margin-bottom: 30px; color: #fff; line-height: 1.6; text-align: left; 
+            width: 100%; max-width: 700px; background: rgba(0,0,0,0.4); padding: 25px; 
+            border-radius: 10px; border-left: 4px solid var(--highlight-blue); box-sizing: border-box;
+        }
+
+        /* 纯CSS绘制一个装饰性等边三角形 */
+        .triangle-decoration {
+            width: 0; height: 0; margin: 0 auto 30px;
+            border-left: 60px solid transparent; border-right: 60px solid transparent;
+            border-bottom: 104px solid rgba(0, 242, 255, 0.2);
+            position: relative; filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.5));
+        }
+        .triangle-decoration::after {
+            content: ''; position: absolute; top: 10px; left: -50px;
+            border-left: 50px solid transparent; border-right: 50px solid transparent;
+            border-bottom: 86px solid rgba(10, 25, 60, 0.8);
+        }
+
+        /* 输入区样式 */
+        .input-group {
+            display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;
+            align-items: center; font-size: 1.4em; font-weight: bold; color: var(--highlight-cyan);
+        }
+        .input-box {
+            background: rgba(255, 255, 255, 0.1); border: 2px solid #FF9800; color: #FF9800;
+            width: 120px; height: 50px; border-radius: 10px; text-align: center;
+            font-size: 1.2em; font-weight: bold; outline: none; margin: 0 10px; box-shadow: inset 0 0 10px rgba(255, 152, 0, 0.2);
+        }
+        .input-box:focus { box-shadow: inset 0 0 15px rgba(255, 152, 0, 0.6); }
+        .input-box::placeholder { color: rgba(255, 152, 0, 0.4); }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #0a99ff, #00f2ff); border: none; color: #000;
+            padding: 12px 35px; font-size: 1.2em; font-weight: bold; border-radius: 30px;
+            cursor: pointer; transition: all 0.3s; margin-top: 15px; box-shadow: 0 5px 15px rgba(0, 242, 255, 0.3);
+        }
+        .submit-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0, 242, 255, 0.5); }
+
+        #feedback { margin-top: 20px; font-size: 1.3em; font-weight: bold; min-height: 30px; text-align: center; }
+        .correct-text { color: var(--correct-color); text-shadow: 0 0 10px rgba(76, 175, 80, 0.5); }
+        .error-text { color: var(--error-color); text-shadow: 0 0 10px rgba(255, 82, 82, 0.5); }
+
+        .action-bar {
+            position: relative; margin-top: 10px; margin-bottom: 40px; display: flex; 
+            gap: 15px; z-index: 100; flex-wrap: wrap; justify-content: center;
+        }
+        .nav-btn {
+            display: inline-block; padding: 12px 25px; background-color: var(--glass-bg); color: var(--text-light); 
+            text-decoration: none; border-radius: 10px; font-size: 1.1em; font-weight: bold; border: 1px solid rgba(0, 242, 255, 0.3);
+            cursor: pointer; transition: all 0.2s;
+        }
+        .nav-btn:hover { background-color: rgba(20, 60, 120, 0.9); border-color: var(--highlight-cyan); color: var(--highlight-cyan); }
+
+        /* 📱 手机端适配 */
+        @media (max-width: 768px) {
+            .game-title { font-size: 1.6em; }
+            .header-bar { flex-direction: column; gap: 10px; text-align: center; }
+            #puzzle-container { padding: 25px 15px; }
+            .puzzle-desc { font-size: 1.1em; padding: 15px; }
+            .input-group { font-size: 1.2em; flex-direction: column; gap: 10px; }
+            .input-box { width: 100px; height: 40px; font-size: 1.1em; }
+            .submit-btn { padding: 10px 25px; font-size: 1.1em; }
+            .nav-btn { font-size: 1em; padding: 10px 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="tech-grid"></div>
+    <div class="overlay">
+        <div class="header-bar">
+            <h2 class="game-title">📐 第八关：等差数列</h2>
+            <div class="mission-status" id="stage-indicator">挑战：1 / 2</div>
+        </div>
+        
+        <div id="puzzle-container">
+            
+            <div id="puzzle-1" class="puzzle-content active">
+                <div class="triangle-decoration"></div>
+                <div class="puzzle-desc">
+                    【挑战 1：三角迷阵】<br>
+                    有一个边长为 <strong>1 米</strong> 的大等边三角形，将它分割成许多边长为 <strong>2 厘米</strong> 的小等边三角形。<br><br>
+                    <span style="font-size: 0.9em; color: #aaa;">💡 提示：1 米 = 100 厘米。不妨画个草图，从大三角形的最上面往下，一层一层地找找规律。</span>
+                </div>
+                
+                <div class="input-group">
+                    请问：边长为 2 厘米的小等边三角形共有 <input type="number" id="ans-1" class="input-box" placeholder="?"> 个
+                </div>
+
+                <button class="submit-btn" onclick="checkAnswer(1)">验证数量</button>
+            </div>
+
+            <div id="puzzle-2" class="puzzle-content">
+                <div class="triangle-decoration"></div>
+                <div class="puzzle-desc">
+                    【挑战 2：纵横交错】<br>
+                    还是刚刚那个边长为 1 米的大等边三角形，被分割成了许多边长为 2 厘米的小等边三角形。<br><br>
+                    随着分割，大三角形内出现了很多网格线。<br>
+                    请问：<strong>所有长度为 2 厘米的线段，它们的总长度加起来是多少厘米？</strong>
+                </div>
+
+                <div class="input-group">
+                    所有 2 厘米线段的总长度是 <input type="number" id="ans-2" class="input-box" placeholder="?"> 厘米
+                </div>
+
+                <button class="submit-btn" onclick="checkAnswer(2)">核对总长度</button>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+
+        <div class="action-bar">
+            <button id="prev-btn" class="nav-btn" onclick="prevPuzzle()" style="display: none;">上一题</button>
+            <button id="next-btn" class="nav-btn" onclick="nextPuzzle()" style="display: inline-block;">下一题</button>
+            <a href="index.html" id="home-btn" class="nav-btn">返回游戏大厅</a>
+        </div>
+    </div>
+
+    <script>
+        let currentPuzzle = 1;
+        const totalPuzzles = 2;
+
+        // 题目答案设定
+        const correctAns1 = "2500";
+        const correctAns2 = "7650";
+
+        const feedbackEl = document.getElementById('feedback');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        // 控制底部导航按钮显隐
+        function updateNavButtons() {
+            document.getElementById('stage-indicator').innerText = `挑战：${currentPuzzle} / ${totalPuzzles}`;
+            
+            if (currentPuzzle === 1) {
+                // 第一题时：隐藏“上一题”，始终显示“下一题”
+                prevBtn.style.display = "none";
+                nextBtn.style.display = "inline-block";
+            } else if (currentPuzzle === 2) {
+                // 第二题时：显示“上一题”，隐藏“下一题”
+                prevBtn.style.display = "inline-block";
+                nextBtn.style.display = "none";
+            }
+        }
+
+        function checkAnswer(puzzleNum) {
+            if (puzzleNum === 1) {
+                const ans1 = document.getElementById('ans-1').value.trim();
+
+                if(ans1 === "") {
+                    showFeedback("⚠️ 请填入计算出的数量哦！", "error");
+                    return;
+                }
+
+                if (ans1 === correctAns1) {
+                    showFeedback("✔️ 回答正确！奇数数列的求和规律掌握得不错！", "correct");
+                } else {
+                    showFeedback("❌ 不对哦。💡 提示：从上往下，第一层有1个，第二层有3个，最后一层有多少个呢？", "error");
+                }
+            } else if (puzzleNum === 2) {
+                const ans2 = document.getElementById('ans-2').value.trim();
+
+                if(ans2 === "") {
+                    showFeedback("⚠️ 请填入计算出的总长度哦！", "error");
+                    return;
+                }
+
+                if (ans2 === correctAns2) {
+                    showFeedback("🏆 太精彩了！完全正确！你成功解开了等差数列的谜题！", "correct");
+                } else {
+                    showFeedback("❌ 长度不对哦。提示：三角形内部有3个方向的平行线，可以先算出一个方向的线段总数。", "error");
+                }
+            }
+        }
+
+        function nextPuzzle() {
+            if (currentPuzzle < totalPuzzles) {
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.remove('active');
+                currentPuzzle++;
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.add('active');
+                feedbackEl.innerHTML = "";
+                updateNavButtons();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function prevPuzzle() {
+            if (currentPuzzle > 1) {
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.remove('active');
+                currentPuzzle--;
+                document.getElementById(`puzzle-${currentPuzzle}`).classList.add('active');
+                feedbackEl.innerHTML = "";
+                updateNavButtons();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function showFeedback(msg, type) {
+            feedbackEl.innerText = msg;
+            feedbackEl.className = type === "correct" ? "correct-text" : "error-text";
+        }
+
+        // 初始化页面时更新按钮状态
+        window.onload = updateNavButtons;
+    </script>
+</body>
+</html>
